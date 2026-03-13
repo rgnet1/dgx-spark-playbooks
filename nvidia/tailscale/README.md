@@ -18,8 +18,9 @@
   - [Step 9. Configure SSH authentication](#step-9-configure-ssh-authentication)
   - [Step 10. Test SSH connection](#step-10-test-ssh-connection)
   - [Step 11. Validate installation](#step-11-validate-installation)
-  - [Step 13. Cleanup and rollback](#step-13-cleanup-and-rollback)
-  - [Step 14. Next steps](#step-14-next-steps)
+  - [Step 13. Access DGX Dashboard over Tailnet](#step-13-access-dgx-dashboard-over-tailnet)
+  - [Step 14. Cleanup and rollback](#step-14-cleanup-and-rollback)
+  - [Step 15. Next steps](#step-15-next-steps)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -316,7 +317,67 @@ Expected output:
 - Successful file transfers
 - Remote command execution working
 
-### Step 13. Cleanup and rollback
+### Step 13. Access DGX Dashboard over Tailnet
+
+The DGX Dashboard is locked to localhost:11000 for security. This means you can only access it over localhost thorugh the ssh tunnel. Instead of manually creating an SSH tunnel every time, use Tailscale Serve to proxy the traffic so you can access it via your Tailscale IP/URL from any device.
+
+## On your DGX Spark machine, run:
+```bash
+## Proxy incoming Tailnet traffic to the local dashboard
+## The --bg flag ensures this keeps running after you close your terminal
+sudo tailscale serve --bg --http=11000 localhost:11000
+```
+
+## Verify proxy is active:
+```bash
+tailscale serve status
+```
+
+If you set up tailsale with Magic DNS, you can use your tailscale URL with:
+
+`http://SPARK_HOST_NAME.XXXXX-YYYYYY.ts.net:11000`
+
+Where XXXXX an YYYYYY are part of the custom domain name to your tailnet.
+
+You can now bookmark this URL and access it anywhere on your tailnet.
+
+### Step 14. Next steps
+
+Your Tailscale setup is complete. You can now:
+
+- Access your DGX Spark device from any network with: `ssh <USERNAME>@<SPARK_HOSTNAME>`
+- Transfer files securely: `scp file.txt <USERNAME>@<SPARK_HOSTNAME>:~/`
+- Open the DGX Dashboard and start JupyterLab, then connect with:
+  `ssh -L 8888:localhost:1102 <USERNAME>@<SPARK_HOSTNAME>`
+
+  > **Note:** Alternatively, see Step 15 for accessing the DGX Dashboard over Tailnet without manual SSH tunneling.
+
+
+### Step 15. Access DGX Dashboard over Tailnet
+
+The DGX Dashboard is locked to localhost:11000 for security. This means you can only access it over localhost thorugh the ssh tunnel. Instead of manually creating an SSH tunnel every time, use Tailscale Serve to proxy the traffic so you can access it via your Tailscale IP/URL from any device.
+
+## On your DGX Spark machine, run:
+```bash
+## Proxy incoming Tailnet traffic to the local dashboard
+## The --bg flag ensures this keeps running after you close your terminal
+sudo tailscale serve --bg --http=11000 localhost:11000
+```
+
+## Verify proxy is active:
+```bash
+tailscale serve status
+```
+
+If you set up tailsale with Magic DNS, you can use your tailscale URL with:
+
+`http://SPARK_HOST_NAME.XXXXX-YYYYYY.ts.net:11000`
+
+Where XXXXX an YYYYYY are part of the custom domain name to your tailnet.
+
+You can now bookmark this URL and access it anywhere on your tailnet.
+
+### Step 14. Cleanup and rollback
 
 Remove Tailscale completely if needed. This will disconnect devices from the
 tailnet and remove all network configurations.
@@ -337,11 +398,15 @@ sudo rm /usr/share/keyrings/tailscale-archive-keyring.gpg
 
 ## Update package list
 sudo apt update
+
+## Remove DGX Dashboard access from tailnet from Step 13
+sudo tailscale serve --https=11000 off
 ```
+
 
 To restore: Re-run installation steps 3-5.
 
-### Step 14. Next steps
+### Step 15. Next steps
 
 Your Tailscale setup is complete. You can now:
 
@@ -350,7 +415,7 @@ Your Tailscale setup is complete. You can now:
 - Open the DGX Dashboard and start JupyterLab, then connect with:
   `ssh -L 8888:localhost:1102 <USERNAME>@<SPARK_HOSTNAME>`
 
-## Troubleshooting
+  > **Note:** Alternatively, see Step 13 for accessing the DGX Dashboard over Tailnet without manual SSH tunneling.
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
